@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "Grid.h"
+#include "Logger.h"
 
 class Frame
 {

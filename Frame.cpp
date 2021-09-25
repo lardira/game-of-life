@@ -32,9 +32,9 @@ void Frame::PollEvents(sf::RenderWindow& window)
             {
                 auto mousePos = GetMousePosition(window);
                 auto cellPos = grid.GetCell(frameSize, mousePos);
-                std::cout << "Mouse Position in Frame: " << mousePos.x << " " << mousePos.y << '\n';
-                std::cout << "Cell Position in Frame: " << cellPos.x << " " << cellPos.y << '\n';
 
+                Logger::PrintVector("Mouse Position in Frame:", mousePos);
+                Logger::PrintVector("Cell Position in Frame:", cellPos);
                 break;
             }
 

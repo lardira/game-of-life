@@ -1,22 +1,12 @@
-#include "SFML/Graphics.hpp"
-
 #include <iostream>
+#include "Frame.h"
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(800, 800), "SFML works!");
+	const sf::Vector2<unsigned int> frameSize{ 1000, 1000 };
+	const sf::Vector2<unsigned int> gridSize{ 10, 10 };
 
-    while (window.isOpen())
-    {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-                window.close();
-        }
+	Frame* mainFrame = new Frame(frameSize, "Game Of Life", gridSize);
 
-        window.clear();
-        window.display();
-    }
 	return 0;
 }

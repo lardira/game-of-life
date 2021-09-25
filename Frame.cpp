@@ -2,45 +2,44 @@
 #include <iostream>
 
 Frame::Frame(sf::Vector2<unsigned int> frameSize = { 800, 800 }, sf::String frameTitle = "Hello, there!", sf::Vector2<unsigned int> gridSize = { 10, 10 })
-    : frameSize(frameSize), grid(gridSize)
-{
-    sf::RenderWindow window(sf::VideoMode(frameSize.x, frameSize.y), frameTitle);
-    PollEvents(window);
-}
-
-Frame::Frame()
-    : frameSize(800, 800)
+    : frameSize(frameSize), grid(gridSize, frameSize)
 {
     sf::RenderWindow window(sf::VideoMode(frameSize.x, frameSize.y), "Game Of Life");
-    PollEvents(window);
+
+    while (window.isOpen())
+    {
+        PollEvents(window);
+        window.clear();
+        for (auto& cell : grid.GetCells())
+            window.draw(cell.cellShape);
+        window.display();
+    }
 }
 
 void Frame::PollEvents(sf::RenderWindow& window)
 {
-    while (window.isOpen())
+    sf::Event event;
+    while (window.pollEvent(event))
     {
-        sf::Event event;
-        while (window.pollEvent(event))
+        switch (event.type)
         {
-            switch (event.type)
-            {
-            case sf::Event::Closed:
-                window.close();
-                break;
+        case sf::Event::Closed:
+            window.close();
+            break;
 
-            case sf::Event::MouseButtonPressed:
-            {
-                auto mousePos = GetMousePosition(window);
-                auto cellPos = grid.GetCell(frameSize, mousePos);
+        case sf::Event::MouseButtonPressed:
+        {
+            auto mousePos = GetMousePosition(window);
+            auto cell = grid.GetCell(mousePos);
 
-                Logger::PrintVector("Mouse Position in Frame:", mousePos);
-                Logger::PrintVector("Cell Position in Frame:", cellPos);
-                break;
-            }
+            Logger::PrintVector("Mouse Position in Frame:", mousePos);
+            Logger::PrintVector("Cell in Frame:", cell);
+            Logger::PrintVector("Cell Position in Frame:", grid.GetCellPosition(cell));
+            break;
+        }
 
-            default:
-                break;
-            }
+        default:
+            break;
         }
     }
 }

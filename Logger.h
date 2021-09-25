@@ -2,7 +2,7 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
-static class Logger
+class Logger
 {
 private:
 	int loggerLevel = 0;

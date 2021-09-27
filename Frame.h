@@ -9,6 +9,7 @@ private:
 	sf::Vector2<unsigned int> frameSize;
 	const sf::Vector2<unsigned int> headerSize{ 7, 30 }; // based on Window's windows' headers toolbars
 	Grid grid;
+	bool isSimulating = false;
 public:
 	Frame() = default;
 	~Frame() = default;

@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <algorithm>
 
 class Grid
 {
@@ -11,6 +12,7 @@ public:
 
 		sf::RectangleShape cellShape;
 		sf::Vector2f position{ 0.f, 0.f };
+		sf::Vector2i id;
 		sf::Vector2f size;
 		bool isAlive = false;
 		sf::Color currentColor = dead;
@@ -22,7 +24,10 @@ private:
 
 	int lineSize = 2;
 	std::vector<Cell> cells;
+	std::vector<sf::Vector2<int>> aliveCellsID;
 	sf::Vector2<float> cellSize;
+
+	int CountAliveCells(Cell& cell);
 
 public:
 	Grid();
@@ -38,11 +43,12 @@ public:
 	
 	void SetCellSize(sf::Vector2<float> newSize);
 	void SetColor(Cell& cell, sf::Color color);
-	void SetState(Grid::Cell& cell, bool isAlive);
+	void ChangeState(Grid::Cell& cell);
 
 	void OnFrameResized(sf::Vector2<unsigned int> newFrameSize);
 
-	void Simulate(bool state);
+	void Simulate(bool isSimulating);
+	void Reset();
 
 private:
 	void FillCells(std::vector<Cell>& cells);

@@ -31,7 +31,7 @@ void Grid::SetCellSize(sf::Vector2<float> newSize)
 
 sf::Vector2<float> Grid::GetCellPosition(sf::Vector2<int> cell) const
 {
-	return { (float)(cell.x * frameSize.x / gridSize.x), (float)(cell.y * frameSize.y / gridSize.y)};
+	return {(float)(cell.x * frameSize.x / gridSize.x), (float)(cell.y * frameSize.y / gridSize.y)};
 }
 
 sf::Vector2<unsigned int> Grid::GetGridSize() const
@@ -57,6 +57,7 @@ void Grid::FillCells(std::vector<Grid::Cell>& cells)
 			cell.position = GetCellPosition(sf::Vector2i(a, b));
 			cell.cellShape.setPosition(cell.position);
 			cell.cellShape.setFillColor(cell.currentColor);
+			cell.id = { (int)a, (int)b };
 			cells.push_back(cell);
 		}
 }
@@ -64,6 +65,27 @@ void Grid::FillCells(std::vector<Grid::Cell>& cells)
 std::vector<Grid::Cell>& Grid::GetCells()
 {
 	return cells;
+}
+
+int Grid::CountAliveCells(Grid::Cell& cell)
+{
+	int count = 0;
+	for (int row = 0; row < 3; row++)
+		for (int col = 0; col < 3; col++)
+		{
+			int colToCheck = cell.id.x - 1 + col;
+			int rowToCheck = cell.id.y - 1 + row;
+
+			//check grid boundaries
+			if (colToCheck < 0 || rowToCheck < 0) continue;
+			if (colToCheck > gridSize.x - 1 || rowToCheck > gridSize.y - 1) continue;
+			
+			auto& checkedCell = GetCellByID({ colToCheck, rowToCheck });
+			if (checkedCell.isAlive && checkedCell.id != cell.id)
+				count++;
+		}
+
+	return count; //it shouldn't count itself
 }
 
 Grid::Cell& Grid::GetCellByID(sf::Vector2<int> cellID)
@@ -78,14 +100,36 @@ void Grid::SetColor(Grid::Cell& cell, sf::Color color)
 	cell.cellShape.setFillColor(color);
 }
 
-void Grid::SetState(Grid::Cell& cell, bool isAlive)
+void Grid::Reset()
 {
-	cell.isAlive = isAlive;
-
-	if (isAlive)
-		Grid::SetColor(cell, cell.alive);
-	else
+	for (auto& id : aliveCellsID)
+	{
+		auto& cell = GetCellByID(id);
+		cell.isAlive = false;
 		Grid::SetColor(cell, cell.dead);
+	}
+	aliveCellsID.clear();
+}
+
+void Grid::ChangeState(Grid::Cell& cell)
+{
+	cell.isAlive = !cell.isAlive;
+
+	if (cell.isAlive)
+	{
+		Grid::SetColor(cell, cell.alive);
+		aliveCellsID.push_back(cell.id);
+		std::cout << "Added cell of: " << cell.id.x << ", " << cell.id.y << '\n';
+	}
+	else
+	{
+		Grid::SetColor(cell, cell.dead);
+		auto result = std::find(aliveCellsID.begin(), aliveCellsID.end(), cell.id);
+		if (result != aliveCellsID.end())
+			aliveCellsID.erase(result);
+
+		std::cout << "Deleted cell at: " << cell.id.x << ", " << cell.id.y << '\n';
+	}
 }
 
 void Grid::OnFrameResized(sf::Vector2<unsigned int> newFrameSize)
@@ -94,7 +138,51 @@ void Grid::OnFrameResized(sf::Vector2<unsigned int> newFrameSize)
 	Grid::SetCellSize({ (float)(frameSize.x / gridSize.x - lineSize), (float)(frameSize.y / gridSize.y - lineSize) });
 }
 
-void Grid::Simulate(bool state)
-{
 
+/*Rules
+	For a space that is populated:
+	*Each cell with one or no neighbors dies, as if by solitude.
+	*Each cell with four or more neighbors dies, as if by overpopulation.
+	*Each cell with two or three neighbors survives.
+
+	For a space that is empty or unpopulated:
+	*Each cell with three neighbors becomes populated.*/
+void Grid::Simulate(bool isSimulating)
+{
+	std::vector<sf::Vector2i> cellsToPopulate, cellsToDie;
+
+	if (isSimulating && aliveCellsID.size() > 0)
+	{
+		for (auto& cellID : aliveCellsID)
+		{
+			auto& cell = GetCellByID(cellID);
+			
+			//checks for cells to populate
+			//(although extremely inefficient);
+			for (int row = 0; row < 3; row++)
+				for (int col = 0; col < 3; col++)
+				{
+					int colToCheck = cell.id.x - 1 + col;
+					int rowToCheck = cell.id.y - 1 + row;
+
+					//check grid boundaries
+					if (colToCheck < 0 || rowToCheck < 0) continue;
+					if (colToCheck > gridSize.x - 1 || rowToCheck > gridSize.y - 1) continue;
+
+					auto& cellNearNeighbours = GetCellByID({ colToCheck, rowToCheck });
+					if (CountAliveCells(cellNearNeighbours) == 3)
+						cellsToPopulate.push_back(cellNearNeighbours.id);
+				}
+
+			//checks for cells to die
+			int neighbours = CountAliveCells(cell);
+			if (neighbours > 3 || neighbours < 2)
+				cellsToDie.push_back(cell.id);
+		}
+
+		for (auto& id : cellsToDie)
+			ChangeState(GetCellByID(id));
+		for (auto& id : cellsToPopulate)
+			ChangeState(GetCellByID(id));
+	}
 }

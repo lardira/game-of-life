@@ -5,7 +5,7 @@ Frame::Frame(sf::Vector2<unsigned int> frameSize = { 800, 800 }, sf::String fram
     : frameSize(frameSize), grid(gridSize, frameSize)
 {
     sf::RenderWindow window(sf::VideoMode(frameSize.x, frameSize.y),  frameTitle);
-    window.setFramerateLimit(15);
+    window.setFramerateLimit(10);
 
     while (window.isOpen())
     {
@@ -35,7 +35,7 @@ void Frame::PollEvents(sf::RenderWindow& window)
         {
             auto mousePos = GetMousePosition(window);
             Grid::Cell& cell = grid.GetCellByPos(mousePos);
-            grid.SetState(cell, true);
+            grid.ChangeState(cell);
             break;
         }
 
@@ -46,6 +46,11 @@ void Frame::PollEvents(sf::RenderWindow& window)
         case sf::Event::KeyPressed:
             if (event.key.code == sf::Keyboard::Space)
                 isSimulating = !isSimulating;
+            if (event.key.code == sf::Keyboard::R)
+            {
+                Frame::isSimulating = false;
+                grid.Reset();
+            }
             break;
 
         default:

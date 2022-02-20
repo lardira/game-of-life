@@ -54,8 +54,8 @@ void Grid::FillCells(std::vector<Grid::Cell>& cells)
 			Grid::Cell cell;
 			cell.size = cellSize;
 			cell.cellShape = sf::RectangleShape{ cell.size };
-			cell.position = GetCellPosition(sf::Vector2i(a, b));
-			cell.cellShape.setPosition(cell.position);
+			auto cellPos = GetCellPosition({ (int)a, (int)b });
+			cell.cellShape.setPosition(cellPos);
 			cell.cellShape.setFillColor(cell.currentColor);
 			cell.id = { (int)a, (int)b };
 			cells.push_back(cell);
@@ -77,15 +77,17 @@ int Grid::CountAliveCells(Grid::Cell& cell)
 			int rowToCheck = cell.id.y - 1 + row;
 
 			//check grid boundaries
-			if (colToCheck < 0 || rowToCheck < 0) continue;
-			if (colToCheck > gridSize.x - 1 || rowToCheck > gridSize.y - 1) continue;
+			if (colToCheck < 0 || rowToCheck < 0) 
+				continue;
+			if (colToCheck > gridSize.x - 1 || rowToCheck > gridSize.y - 1) 
+				continue;
 			
 			auto& checkedCell = GetCellByID({ colToCheck, rowToCheck });
+			//it shouldn't count itself
 			if (checkedCell.isAlive && checkedCell.id != cell.id)
 				count++;
 		}
-
-	return count; //it shouldn't count itself
+	return count; 
 }
 
 Grid::Cell& Grid::GetCellByID(sf::Vector2<int> cellID)
@@ -119,7 +121,6 @@ void Grid::ChangeState(Grid::Cell& cell)
 	{
 		Grid::SetColor(cell, cell.alive);
 		aliveCellsID.push_back(cell.id);
-		std::cout << "Added cell of: " << cell.id.x << ", " << cell.id.y << '\n';
 	}
 	else
 	{
@@ -127,8 +128,6 @@ void Grid::ChangeState(Grid::Cell& cell)
 		auto result = std::find(aliveCellsID.begin(), aliveCellsID.end(), cell.id);
 		if (result != aliveCellsID.end())
 			aliveCellsID.erase(result);
-
-		std::cout << "Deleted cell at: " << cell.id.x << ", " << cell.id.y << '\n';
 	}
 }
 
@@ -138,20 +137,11 @@ void Grid::OnFrameResized(sf::Vector2<unsigned int> newFrameSize)
 	Grid::SetCellSize({ (float)(frameSize.x / gridSize.x - lineSize), (float)(frameSize.y / gridSize.y - lineSize) });
 }
 
-
-/*Rules
-	For a space that is populated:
-	*Each cell with one or no neighbors dies, as if by solitude.
-	*Each cell with four or more neighbors dies, as if by overpopulation.
-	*Each cell with two or three neighbors survives.
-
-	For a space that is empty or unpopulated:
-	*Each cell with three neighbors becomes populated.*/
-void Grid::Simulate(bool isSimulating)
+void Grid::Run(bool isRunning)
 {
-	std::vector<sf::Vector2i> cellsToPopulate, cellsToDie;
+	std::vector<sf::Vector2i> cellsToChange;
 
-	if (isSimulating && aliveCellsID.size() > 0)
+	if (isRunning && aliveCellsID.size() > 0)
 	{
 		for (auto& cellID : aliveCellsID)
 		{
@@ -166,23 +156,23 @@ void Grid::Simulate(bool isSimulating)
 					int rowToCheck = cell.id.y - 1 + row;
 
 					//check grid boundaries
-					if (colToCheck < 0 || rowToCheck < 0) continue;
-					if (colToCheck > gridSize.x - 1 || rowToCheck > gridSize.y - 1) continue;
+					if (colToCheck < 0 || rowToCheck < 0) 
+						continue;
+					if (colToCheck > gridSize.x - 1 || rowToCheck > gridSize.y - 1) 
+						continue;
 
 					auto& cellNearNeighbours = GetCellByID({ colToCheck, rowToCheck });
 					if (CountAliveCells(cellNearNeighbours) == 3)
-						cellsToPopulate.push_back(cellNearNeighbours.id);
+						cellsToChange.push_back(cellNearNeighbours.id);
 				}
 
 			//checks for cells to die
 			int neighbours = CountAliveCells(cell);
 			if (neighbours > 3 || neighbours < 2)
-				cellsToDie.push_back(cell.id);
+				cellsToChange.push_back(cell.id);
 		}
 
-		for (auto& id : cellsToDie)
-			ChangeState(GetCellByID(id));
-		for (auto& id : cellsToPopulate)
+		for (auto& id : cellsToChange)
 			ChangeState(GetCellByID(id));
 	}
 }

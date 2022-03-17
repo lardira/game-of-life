@@ -2,7 +2,9 @@
 
 #include "Frame.h"
 
-Frame::Frame(sf::Vector2<unsigned int> frameSize = { 800, 800 }, sf::String frameTitle = "Game Of Life", sf::Vector2<unsigned int> gridSize = { 30, 30 })
+Frame::Frame(sf::Vector2<unsigned int> frameSize = { 800, 800 },
+             sf::String frameTitle = "Game Of Life", 
+             sf::Vector2<unsigned int> gridSize = { 30, 30 })
     : frameSize(frameSize), grid(gridSize, frameSize)
 {
     window = new sf::RenderWindow(sf::VideoMode(frameSize.x, frameSize.y),  frameTitle);
